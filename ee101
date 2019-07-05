@@ -1,0 +1,526 @@
+// Hello world!
+
+print('Hello World!');
+
+
+
+/*
+ All the javascript you need to know (almost)
+ */
+
+var variable = 1
+
+var str = 'Hello, World!'
+
+var list = [1.23, 8, -3]
+print(list[2])
+
+var dictionary = {
+  a: 'Hello',
+  b: 10,
+  c: 0.1343,
+  d: list
+}
+print(dictionary.b)
+
+print(n1, str, list, dictionary)
+
+
+
+// A list of harvest dates.
+var dates = ee.List(["2012-08-14", "2013-08-25", "2014-09-01", "2015-08-23"])
+
+// A function to convert a date to day of year.
+function DayOfYear(date) {
+  return ee.Date(date).getRelative('day', 'year')
+}
+
+// Find the average harvest day of year.
+print(dates)
+print(dates.map(DayOfYear))
+print(dates.map(DayOfYear).reduce(ee.Reducer.mean()))
+
+
+
+// Load an image by name.
+var image = ee.Image("USGS/SRTMGL1_003")
+print(image);
+
+
+
+// Style an image.
+var image = ee.Image("USGS/SRTMGL1_003")
+Map.addLayer(image, {min:0, max:1000, palette: ["blue", "yellow", "red"]})
+
+
+
+// Filter an image collection.
+var collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+var filtered = collection.filterDate('2015-02-01', '2015-09-01');
+
+Map.addLayer(filtered);
+
+
+
+// Display a collection with visualization parameters.
+var collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+var filtered = collection.filterDate('2015-02-01', '2015-09-01');
+
+Map.addLayer(filtered, {min:0, max:0.3, bands:['B4','B3','B2']}, 'RGB');
+
+
+
+// Reduce an image collection.
+var collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+var filtered = collection.filterDate('2015-02-01', '2015-09-01');
+var reduced = filtered.median();
+
+Map.addLayer(reduced, {min:0, max:0.3, bands:['B4','B3','B2']}, 'RGB');
+
+
+
+var geometry = /* color: #d63000 */ee.Geometry.Point([8.522295444335896, 47.37609111721158]);
+// Display 1 image from the collection.
+var first = ee.ImageCollection('LANDSAT/LC08/C01/T1_TOA')
+    .filterBounds(geometry)
+    .sort("CLOUD_COVER", true)
+    .first()
+Map.addLayer(first, {min:0, max:0.3, bands:['B4','B3','B2']}, 'First');
+
+var image2 = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_194027_20160825")
+Map.addLayer(image2, {min:0, max:0.3, bands:['B4','B3','B2']}, 'RGB');
+
+
+
+// Create an NDVI Image, the hard way.
+var image = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_194027_20160825")
+
+var red = image.select('B4');
+var nir = image.select('B5');
+var ndvi = nir.subtract(red).divide(nir.add(red));
+Map.addLayer(ndvi, {min:0, max:1}, 'NDVI');
+
+
+
+// Easier NDVI
+var image = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_194027_20160825")
+var ndvi = image.normalizedDifference(['B5', 'B4']);
+Map.addLayer(ndvi, {min:0, max:1}, 'NDVI');
+
+
+
+// NDVI as a function
+function addNdvi(input) {
+  var ndvi = input.normalizedDifference(['B5', 'B4']).rename("ndvi")
+  return input.addBands(ndvi)
+}
+
+var image = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_194027_20160825")
+var test = addNdvi(image)
+Map.addLayer(test, {bands:['ndvi'], min:0, max:1})
+
+
+
+// Mapping a function.
+function addNDVI(input) {
+  var ndvi = input.normalizedDifference(['B5', 'B4']).rename("ndvi")
+  return input.addBands(ndvi)
+}
+
+var collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+    .filterDate('2015-02-01', '2015-09-01')
+
+var ndviCollection = collection.map(addNDVI);
+Map.addLayer(ndviCollection, {bands:['ndvi'], min:0, max:1}, 'NDVI')
+
+
+
+// Greenest Pixel Composite
+function addNDVI(input) {
+  var ndvi = input.normalizedDifference(['B5', 'B4']).rename("ndvi")
+  return input.addBands(ndvi)
+}
+
+var collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+    .filterDate('2015-02-01', '2015-09-01')
+
+var ndviCollection = collection.map(addNDVI)
+var composite = ndviCollection.qualityMosaic('ndvi')
+Map.addLayer(composite, {max:0.3, bands:["B4", "B3", "B2"]}, 'Greenest Pixel')
+
+
+
+// Greenest Pixel Composite
+function addNDVI(image) {
+  return image.addBands(image.normalizedDifference(['B5', 'B4']).rename("ndvi"))
+}
+
+var composite = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+      .filterDate('2015-02-01', '2015-09-01')
+      .map(addNDVI)
+      .qualityMosaic('ndvi')
+
+Map.addLayer(composite, {max:0.3, bands:["B4", "B3", "B2"]}, 'Greenest Pixel')
+
+
+
+var geometry = /* color: #d63000 */ee.Geometry({
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -76.35245788428853,
+                -12.447412341990994
+              ],
+              [
+                -75.54457210530421,
+                -12.450095753928759
+              ],
+              [
+                -75.53084351036512,
+                -11.791878933616568
+              ],
+              [
+                -76.35244715016199,
+                -11.791879041950281
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                8.401259598309707,
+                47.29621608181255
+              ],
+              [
+                8.680037674481582,
+                47.29435329453735
+              ],
+              [
+                8.671797928387832,
+                47.43388026826312
+              ],
+              [
+                8.398513016278457,
+                47.43388026826312
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        }
+      ],
+      "coordinates": []
+    });
+// Exporting the greenest pixel mosaic.
+function addNDVI(image) {
+  return image.addBands(image.normalizedDifference(['B5', 'B4']).rename("ndvi"))
+}
+
+var composite = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+      .filterDate('2015-02-01', '2015-09-01')
+      .map(addNDVI)
+      .qualityMosaic('ndvi')
+
+Map.addLayer(composite, {max:0.3, bands:["B4", "B3", "B2"]}, 'RGB');
+
+Export.image.toDrive({
+  image: composite.select(['ndvi']),
+  description: 'GreenestPixel',
+  region: geometry,
+  scale: 100
+});
+
+
+
+var geometry = /* color: #d63000 */ee.Geometry({
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -76.35245788428853,
+                -12.447412341990994
+              ],
+              [
+                -75.54457210530421,
+                -12.450095753928759
+              ],
+              [
+                -75.53084351036512,
+                -11.791878933616568
+              ],
+              [
+                -76.35244715016199,
+                -11.791879041950281
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                8.401259598309707,
+                47.29621608181255
+              ],
+              [
+                8.680037674481582,
+                47.29435329453735
+              ],
+              [
+                8.671797928387832,
+                47.43388026826312
+              ],
+              [
+                8.398513016278457,
+                47.43388026826312
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        }
+      ],
+      "coordinates": []
+    });
+// Regional Statistics
+function addNDVI(image) {
+  return image.addBands(image.normalizedDifference(['B5', 'B4']).rename("ndvi"))
+}
+
+var composite = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+      .filterDate('2015-02-01', '2015-09-01')
+      .map(addNDVI)
+      .qualityMosaic('ndvi');
+
+var stats = composite.select('ndvi').reduceRegion({
+	reducer: ee.Reducer.mean(), 
+	geometry: geometry, 
+	scale: 100
+})
+    
+print(stats)
+
+
+
+var geometry = /* color: #d63000 */ee.Geometry({
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -76.35245788428853,
+                -12.447412341990994
+              ],
+              [
+                -75.54457210530421,
+                -12.450095753928759
+              ],
+              [
+                -75.53084351036512,
+                -11.791878933616568
+              ],
+              [
+                -76.35244715016199,
+                -11.791879041950281
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                8.401259598309707,
+                47.29621608181255
+              ],
+              [
+                8.680037674481582,
+                47.29435329453735
+              ],
+              [
+                8.671797928387832,
+                47.43388026826312
+              ],
+              [
+                8.398513016278457,
+                47.43388026826312
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        }
+      ],
+      "coordinates": []
+    });
+// Chart
+function addNDVI(image) {
+  return image.addBands(image.normalizedDifference(['B5', 'B4']).rename("ndvi"))
+}
+
+var collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+      // Note the date changes.
+      .filterDate('2015-02-01', '2015-09-01')
+      .map(addNDVI)
+
+var composite = collection.qualityMosaic('ndvi')
+
+print(ui.Chart.image.series({
+  imageCollection: collection.select('ndvi'), 
+  region: geometry, 
+  reducer: ee.Reducer.mean(),
+  scale: 100
+}))
+
+
+
+var geometry = /* color: #d63000 */ee.Geometry({
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -76.35245788428853,
+                -12.447412341990994
+              ],
+              [
+                -75.54457210530421,
+                -12.450095753928759
+              ],
+              [
+                -75.53084351036512,
+                -11.791878933616568
+              ],
+              [
+                -76.35244715016199,
+                -11.791879041950281
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                8.401259598309707,
+                47.29621608181255
+              ],
+              [
+                8.680037674481582,
+                47.29435329453735
+              ],
+              [
+                8.671797928387832,
+                47.43388026826312
+              ],
+              [
+                8.398513016278457,
+                47.43388026826312
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        }
+      ],
+      "coordinates": []
+    });
+// Kitchen Sink Classification
+function addNDVI(image) {
+  return image.addBands(image.normalizedDifference(['B5', 'B4']).rename("ndvi"))
+}
+
+var collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+      // Note the date changes.
+      .filterDate('2015-02-01', '2015-09-01')
+      .filter(ee.Filter.lt("CLOUD_COVER", 10))
+      .select('B[0-9]*')
+      .map(addNDVI)
+
+var composite = collection.qualityMosaic('ndvi')
+
+// Build a classifier using MODIS land cover for training.
+var landcover = ee.Image("MODIS/051/MCD12Q1/2013_01_01").select(0).rename('landcover')
+var training = composite.addBands(landcover).stratifiedSample({
+  numPoints: 500,
+  classBand: "landcover",
+  region: geometry, 
+  scale: 30,
+})
+print(training.reduceColumns(ee.Reducer.frequencyHistogram(), ["landcover"]))
+
+var classifier = ee.Classifier.randomForest(20).train(training, 'landcover')
+var classified = composite.classify(classifier)
+
+var palette = [
+  'aec3d4', // water
+  '152106', '225129', '369b47', '30eb5b', '387242', // forest
+  '6a2325', 'c3aa69', 'b76031', 'd9903d', '91af40',  // shrub, grass
+  '111149', // wetlands
+  'cdb33b', // croplands
+  'cc0013', // urban
+  '33280d', // crop mosaic
+  'd7cdcc', // snow and ice
+  'f7e084', // barren
+  '6f6f6f'  // tundra
+];
+
+Map.addLayer(composite, {max:0.3, bands:["B4", "B3", "B2"]}, 'RGB')
+Map.addLayer(landcover, {min:0, max:17, palette: palette}, "landcover")
+Map.addLayer(classified, {min:0, max:17, palette: palette}, "classification")
+
+
+
+var geometry = /* color: #98ff00 */ee.Geometry.Point([-122.30287513732901, 37.441115780341605]);
+// Linked Maps
+var landsat = ee.ImageCollection("LANDSAT/LC8_L1T")
+    .filterDate('2016-01-01', '2017-01-01')
+    .filterBounds(geometry)
+
+var composite = ee.Algorithms.Landsat.simpleComposite({
+  collection: landsat,
+  asFloat: true
+})
+
+var vis = {
+  "RGB": {bands: ["B4", "B3", "B2"], min:0, max: 0.3},
+  "False Color": {bands: ["B5", "B4", "B3"], min:0, max: [0.5, 0.3, 0.3]},
+  "Thermal": {bands: ["B10"], min: 280, max: 310, palette: ["blue", "red", "orange", "yellow"]}
+}
+
+var maps = [];
+for (var label in vis) {
+  var map = ui.Map().setControlVisibility(false)
+  map.addLayer(composite, vis[label])
+  map.add(ui.Label(label))
+  maps.push(map);
+}
+
+ui.root.widgets().reset(maps)
+var linker = ui.Map.Linker(maps);
+
+maps[0].centerObject(geometry, 11) 
+
+
+
